@@ -133,6 +133,19 @@ body {
   text-align: center;
   padding: 40px;
 }
+
+#sync-badge {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: none;
+}
+
+.badge-synced { background: #1db95422; color: #1db954; }
+.badge-unsynced { background: #ffffff11; color: #888; }
 </style>
 </head>
 <body>
@@ -148,6 +161,7 @@ body {
     </div>
     <div id="song-title">Loading...</div>
     <div id="artist-name">—</div>
+    <div id="sync-badge"></div>
   </div>
 
   <div id="lyrics-panel">
@@ -162,15 +176,46 @@ const API_KEY = "9e220e18970b8a2019578c3118beb55c";
 const USERNAME = "mrmayur";
 
 let lastTrack = "";
-let lines = [];
-let currentLine = 0;
-let lineTimer = null;
+let syncedLines = [];  // [{time: seconds, text: string}]
+let unsyncedLines = [];
+let syncTimer = null;
+let isSynced = false;
+let songStartTime = null; // when we started tracking this song
 
 function setStatus(msg) {
   document.getElementById("lyrics-inner").innerHTML = `<div id="status-msg">${msg}</div>`;
 }
 
-function highlightLine(index) {
+function setBadge(synced) {
+  const b = document.getElementById("sync-badge");
+  b.style.display = "block";
+  b.className = "sync-badge " + (synced ? "badge-synced" : "badge-unsynced");
+  b.textContent = synced ? "⚡ Synced" : "~ Unsynced";
+}
+
+// --- SYNCED MODE (lrclib) ---
+
+function parseLRC(lrc) {
+  const lines = [];
+  for (const raw of lrc.split("\n")) {
+    const match = raw.match(/^\[(\d+):(\d+\.\d+)\](.*)/);
+    if (match) {
+      const time = parseInt(match[1]) * 60 + parseFloat(match[2]);
+      const text = match[3].trim();
+      lines.push({ time, text });
+    }
+  }
+  return lines.sort((a, b) => a.time - b.time);
+}
+
+function renderSyncedLyrics() {
+  const inner = document.getElementById("lyrics-inner");
+  inner.innerHTML = syncedLines
+    .map((l, i) => `<div class="lyric-line" data-i="${i}">${l.text || "♪"}</div>`)
+    .join("");
+}
+
+function highlightSynced(index) {
   document.querySelectorAll(".lyric-line").forEach((el, i) => {
     el.classList.remove("active", "near");
     const d = Math.abs(i - index);
@@ -181,28 +226,91 @@ function highlightLine(index) {
   if (active) active.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
-function startScroll() {
-  clearTimeout(lineTimer);
-  function next() {
-    if (currentLine < lines.length - 1) {
-      currentLine++;
-      highlightLine(currentLine);
-      lineTimer = setTimeout(next, Math.max(1500, lines[currentLine].split(" ").length * 420));
-    }
+function tickSynced() {
+  if (!syncedLines.length || !songStartTime) return;
+  const elapsed = (Date.now() - songStartTime) / 1000;
+
+  let current = 0;
+  for (let i = 0; i < syncedLines.length; i++) {
+    if (syncedLines[i].time <= elapsed) current = i;
+    else break;
   }
-  lineTimer = setTimeout(next, Math.max(1500, lines[0].split(" ").length * 420));
+
+  highlightSynced(current);
+  syncTimer = requestAnimationFrame(tickSynced);
 }
 
-function renderLyrics(text) {
-  clearTimeout(lineTimer);
-  lines = text.split("\n").map(l => l.trim()).filter(l => l && !l.match(/^\[.*\]$/));
-  if (!lines.length) { setStatus("Lyrics not available."); return; }
+function startSynced(lrc) {
+  cancelAnimationFrame(syncTimer);
+  syncedLines = parseLRC(lrc).filter(l => l.text);
+  if (!syncedLines.length) return false;
+  songStartTime = Date.now();
+  renderSyncedLyrics();
+  syncTimer = requestAnimationFrame(tickSynced);
+  setBadge(true);
+  return true;
+}
+
+// --- UNSYNCED FALLBACK ---
+
+function highlightUnsynced(index) {
+  document.querySelectorAll(".lyric-line").forEach((el, i) => {
+    el.classList.remove("active", "near");
+    const d = Math.abs(i - index);
+    if (d === 0) el.classList.add("active");
+    else if (d <= 2) el.classList.add("near");
+  });
+  const active = document.querySelector(".lyric-line.active");
+  if (active) active.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function startUnsynced(text) {
+  cancelAnimationFrame(syncTimer);
+  clearTimeout(syncTimer);
+
+  unsyncedLines = text.split("\n").map(l => l.trim()).filter(l => l && !l.match(/^\[.*\]$/));
+  if (!unsyncedLines.length) { setStatus("No lyrics found."); return; }
 
   const inner = document.getElementById("lyrics-inner");
-  inner.innerHTML = lines.map((l, i) => `<div class="lyric-line" data-i="${i}">${l}</div>`).join("");
-  currentLine = 0;
-  highlightLine(0);
-  startScroll();
+  inner.innerHTML = unsyncedLines.map((l, i) => `<div class="lyric-line" data-i="${i}">${l}</div>`).join("");
+
+  let current = 0;
+  highlightUnsynced(0);
+  setBadge(false);
+
+  function next() {
+    if (current < unsyncedLines.length - 1) {
+      current++;
+      highlightUnsynced(current);
+      syncTimer = setTimeout(next, Math.max(1500, unsyncedLines[current].split(" ").length * 420));
+    }
+  }
+  syncTimer = setTimeout(next, Math.max(1500, unsyncedLines[0].split(" ").length * 420));
+}
+
+// --- MAIN FETCH ---
+
+async function fetchLyrics(artist, song) {
+  setStatus("Loading lyrics...");
+
+  // 1. Try lrclib for synced lyrics
+  try {
+    const r = await fetch(`https://lrclib.net/api/get?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(song)}`);
+    if (r.ok) {
+      const d = await r.json();
+      if (d.syncedLyrics && startSynced(d.syncedLyrics)) return;
+      if (d.plainLyrics && d.plainLyrics.trim()) { startUnsynced(d.plainLyrics); return; }
+    }
+  } catch {}
+
+  // 2. Fallback to lyrics.ovh
+  try {
+    const r = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(song)}`);
+    const d = await r.json();
+    if (d.lyrics?.trim()) { startUnsynced(d.lyrics); return; }
+  } catch {}
+
+  setStatus("No lyrics found for this track.");
 }
 
 async function updateSong() {
@@ -226,15 +334,11 @@ async function updateSong() {
     const key = song + artist;
     if (key === lastTrack) return;
     lastTrack = key;
-    setStatus("Loading lyrics...");
-    clearTimeout(lineTimer);
 
-    try {
-      const lr = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(song)}`);
-      const ld = await lr.json();
-      if (ld.lyrics?.trim()) renderLyrics(ld.lyrics);
-      else setStatus("No lyrics found.");
-    } catch { setStatus("Lyrics unavailable."); }
+    cancelAnimationFrame(syncTimer);
+    clearTimeout(syncTimer);
+
+    fetchLyrics(artist, song);
 
   } catch { setStatus("Connection error."); }
 }
