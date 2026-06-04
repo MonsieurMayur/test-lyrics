@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mayur Lyrics</title>
+
+<style>
+body{
+    margin:0;
+    background:#121212;
+    color:white;
+    font-family:Arial,sans-serif;
+    padding:20px;
+}
+
+#song{
+    font-size:30px;
+    font-weight:bold;
+    margin-bottom:8px;
+}
+
+#artist{
+    color:#b3b3b3;
+    margin-bottom:25px;
+}
+
+#lyrics{
+    white-space:pre-wrap;
+    line-height:1.8;
+    font-size:20px;
+}
+
+.loading{
+    opacity:.7;
+}
+</style>
+</head>
+<body>
+
+<div id="song">Loading...</div>
+<div id="artist"></div>
+<div id="lyrics" class="loading">Waiting for song...</div>
+
+<script>
+const API_KEY = "9e220e18970b8a2019578c3118beb55c";
+const USERNAME = "mrmayur";
+
+let lastTrack = "";
+
+async function updateSong() {
+    try {
+
+        const url =
+        `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${USERNAME}&api_key=${API_KEY}&format=json&limit=1`;
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        const track = data.recenttracks.track[0];
+
+        const song = track.name;
+        const artist = track.artist["#text"];
+
+        document.getElementById("song").textContent = song;
+        document.getElementById("artist").textContent = artist;
+
+        if(lastTrack !== song){
+
+            lastTrack = song;
+
+            const lyricUrl =
+            `https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(song)}`;
+
+            try{
+                const lyricRes = await fetch(lyricUrl);
+                const lyricData = await lyricRes.json();
+
+                document.getElementById("lyrics").textContent =
+                    lyricData.lyrics || "Lyrics not found.";
+            }catch{
+                document.getElementById("lyrics").textContent =
+                    "Lyrics not available.";
+            }
+        }
+
+    } catch(e){
+        document.getElementById("lyrics").textContent =
+        "Connection error.";
+    }
+}
+
+updateSong();
+setInterval(updateSong,10000);
+</script>
+
+</body>
+</html>
