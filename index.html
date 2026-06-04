@@ -6,19 +6,9 @@
 <title>Mayur Lyrics</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0e0e0e; font-family: Arial, sans-serif; color: #fff; overflow: hidden; }
 
-body {
-  background: #0e0e0e;
-  font-family: Arial, sans-serif;
-  color: #fff;
-  overflow: hidden;
-}
-
-#app {
-  display: flex;
-  height: 100vh;
-  background: #0e0e0e;
-}
+#app { display: flex; height: 100vh; background: #0e0e0e; }
 
 #sidebar {
   width: 260px;
@@ -29,123 +19,63 @@ body {
   align-items: center;
   justify-content: center;
   padding: 32px 20px;
-  gap: 18px;
+  gap: 14px;
 }
 
 #album-art {
-  width: 160px;
-  height: 160px;
+  width: 160px; height: 160px;
   background: linear-gradient(135deg, #2a1a4e, #1a3a4e);
   border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   overflow: hidden;
 }
-
-#album-art img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 12px;
-  display: none;
-}
-
+#album-art img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; display: none; }
 #album-emoji { font-size: 48px; }
-
-#song-title {
-  font-size: 16px;
-  font-weight: 600;
-  text-align: center;
-  line-height: 1.3;
-}
-
-#artist-name {
-  font-size: 13px;
-  color: #b3b3b3;
-  text-align: center;
-}
+#song-title { font-size: 16px; font-weight: 600; text-align: center; line-height: 1.3; }
+#artist-name { font-size: 13px; color: #b3b3b3; text-align: center; }
 
 #now-playing-label {
-  font-size: 11px;
-  color: #888;
-  display: flex;
-  align-items: center;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  font-size: 11px; color: #888;
+  display: flex; align-items: center;
+  letter-spacing: 0.5px; text-transform: uppercase;
 }
-
 #status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #1db954;
-  display: inline-block;
-  margin-right: 6px;
-  animation: pulse 2s infinite;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #1db954; display: inline-block;
+  margin-right: 6px; animation: pulse 2s infinite;
 }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+#sync-badge {
+  font-size: 10px; padding: 3px 8px; border-radius: 20px;
+  font-weight: 600; letter-spacing: 0.5px;
+  text-transform: uppercase; display: none;
 }
+.badge-synced { background: #1db95422; color: #1db954; }
+.badge-unsynced { background: #ffffff11; color: #888; }
 
-#lyrics-panel {
-  flex: 1;
-  overflow-y: auto;
-  padding: 60px 40px;
-  scroll-behavior: smooth;
+#offset-wrap {
+  width: 100%;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
 }
+#offset-label { font-size: 11px; color: #666; }
+#offset-slider { width: 100%; accent-color: #1db954; cursor: pointer; }
+#offset-val { font-size: 12px; color: #aaa; }
 
+#lyrics-panel { flex: 1; overflow-y: auto; padding: 60px 40px; scroll-behavior: smooth; }
 #lyrics-panel::-webkit-scrollbar { width: 4px; }
 #lyrics-panel::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-
-#lyrics-inner {
-  max-width: 600px;
-  margin: 0 auto;
-  text-align: center;
-}
+#lyrics-inner { max-width: 600px; margin: 0 auto; text-align: center; }
 
 .lyric-line {
-  font-size: 22px;
-  font-weight: 600;
-  color: #3a3a3a;
-  line-height: 1.6;
-  padding: 6px 0;
+  font-size: 22px; font-weight: 600; color: #3a3a3a;
+  line-height: 1.6; padding: 6px 0;
   transition: color 0.3s, font-size 0.3s, transform 0.3s;
   transform-origin: center;
 }
-
-.lyric-line.active {
-  color: #fff;
-  font-size: 26px;
-  transform: scale(1.04);
-}
-
-.lyric-line.near {
-  color: #888;
-  font-size: 23px;
-}
-
-#status-msg {
-  font-size: 15px;
-  color: #555;
-  text-align: center;
-  padding: 40px;
-}
-
-#sync-badge {
-  font-size: 10px;
-  padding: 3px 8px;
-  border-radius: 20px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  display: none;
-}
-
-.badge-synced { background: #1db95422; color: #1db954; }
-.badge-unsynced { background: #ffffff11; color: #888; }
+.lyric-line.active { color: #fff; font-size: 26px; transform: scale(1.04); }
+.lyric-line.near { color: #888; font-size: 23px; }
+#status-msg { font-size: 15px; color: #555; text-align: center; padding: 40px; }
 </style>
 </head>
 <body>
@@ -156,12 +86,16 @@ body {
       <img id="album-img" src="" alt="">
       <span id="album-emoji">🎵</span>
     </div>
-    <div id="now-playing-label">
-      <span id="status-dot"></span> Now playing
-    </div>
+    <div id="now-playing-label"><span id="status-dot"></span> Now playing</div>
     <div id="song-title">Loading...</div>
     <div id="artist-name">—</div>
     <div id="sync-badge"></div>
+
+    <div id="offset-wrap">
+      <div id="offset-label">Sync nudge</div>
+      <input id="offset-slider" type="range" min="-30" max="30" value="0" step="1">
+      <div id="offset-val">0s</div>
+    </div>
   </div>
 
   <div id="lyrics-panel">
@@ -176,11 +110,19 @@ const API_KEY = "9e220e18970b8a2019578c3118beb55c";
 const USERNAME = "mrmayur";
 
 let lastTrack = "";
-let syncedLines = [];  // [{time: seconds, text: string}]
+let syncedLines = [];
 let unsyncedLines = [];
 let syncTimer = null;
-let isSynced = false;
-let songStartTime = null; // when we started tracking this song
+let songStartEpoch = null; // ms since epoch when song actually started
+
+// offset slider
+const slider = document.getElementById("offset-slider");
+const offsetVal = document.getElementById("offset-val");
+slider.addEventListener("input", () => {
+  offsetVal.textContent = slider.value + "s";
+});
+
+function getOffsetMs() { return parseInt(slider.value) * 1000; }
 
 function setStatus(msg) {
   document.getElementById("lyrics-inner").innerHTML = `<div id="status-msg">${msg}</div>`;
@@ -193,50 +135,43 @@ function setBadge(synced) {
   b.textContent = synced ? "⚡ Synced" : "~ Unsynced";
 }
 
-// --- SYNCED MODE (lrclib) ---
-
+// --- SYNCED ---
 function parseLRC(lrc) {
   const lines = [];
   for (const raw of lrc.split("\n")) {
-    const match = raw.match(/^\[(\d+):(\d+\.\d+)\](.*)/);
-    if (match) {
-      const time = parseInt(match[1]) * 60 + parseFloat(match[2]);
-      const text = match[3].trim();
-      lines.push({ time, text });
-    }
+    const m = raw.match(/^\[(\d+):(\d+(?:\.\d+)?)\](.*)/);
+    if (m) lines.push({ time: parseInt(m[1]) * 60 + parseFloat(m[2]), text: m[3].trim() });
   }
   return lines.sort((a, b) => a.time - b.time);
 }
 
 function renderSyncedLyrics() {
-  const inner = document.getElementById("lyrics-inner");
-  inner.innerHTML = syncedLines
-    .map((l, i) => `<div class="lyric-line" data-i="${i}">${l.text || "♪"}</div>`)
-    .join("");
+  document.getElementById("lyrics-inner").innerHTML =
+    syncedLines.map((l, i) => `<div class="lyric-line" data-i="${i}">${l.text || "♪"}</div>`).join("");
 }
 
-function highlightSynced(index) {
+function highlightLine(index) {
   document.querySelectorAll(".lyric-line").forEach((el, i) => {
     el.classList.remove("active", "near");
     const d = Math.abs(i - index);
     if (d === 0) el.classList.add("active");
     else if (d <= 2) el.classList.add("near");
   });
-  const active = document.querySelector(".lyric-line.active");
-  if (active) active.scrollIntoView({ behavior: "smooth", block: "center" });
+  document.querySelector(".lyric-line.active")?.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function tickSynced() {
-  if (!syncedLines.length || !songStartTime) return;
-  const elapsed = (Date.now() - songStartTime) / 1000;
+  if (!syncedLines.length || !songStartEpoch) return;
+
+  // elapsed = how long the song has been playing, adjusted by nudge slider
+  const elapsed = (Date.now() - songStartEpoch + getOffsetMs()) / 1000;
 
   let current = 0;
   for (let i = 0; i < syncedLines.length; i++) {
     if (syncedLines[i].time <= elapsed) current = i;
     else break;
   }
-
-  highlightSynced(current);
+  highlightLine(current);
   syncTimer = requestAnimationFrame(tickSynced);
 }
 
@@ -244,7 +179,6 @@ function startSynced(lrc) {
   cancelAnimationFrame(syncTimer);
   syncedLines = parseLRC(lrc).filter(l => l.text);
   if (!syncedLines.length) return false;
-  songStartTime = Date.now();
   renderSyncedLyrics();
   syncTimer = requestAnimationFrame(tickSynced);
   setBadge(true);
@@ -252,72 +186,65 @@ function startSynced(lrc) {
 }
 
 // --- UNSYNCED FALLBACK ---
-
-function highlightUnsynced(index) {
-  document.querySelectorAll(".lyric-line").forEach((el, i) => {
-    el.classList.remove("active", "near");
-    const d = Math.abs(i - index);
-    if (d === 0) el.classList.add("active");
-    else if (d <= 2) el.classList.add("near");
-  });
-  const active = document.querySelector(".lyric-line.active");
-  if (active) active.scrollIntoView({ behavior: "smooth", block: "center" });
-}
-
 function startUnsynced(text) {
   cancelAnimationFrame(syncTimer);
   clearTimeout(syncTimer);
-
   unsyncedLines = text.split("\n").map(l => l.trim()).filter(l => l && !l.match(/^\[.*\]$/));
   if (!unsyncedLines.length) { setStatus("No lyrics found."); return; }
 
-  const inner = document.getElementById("lyrics-inner");
-  inner.innerHTML = unsyncedLines.map((l, i) => `<div class="lyric-line" data-i="${i}">${l}</div>`).join("");
+  document.getElementById("lyrics-inner").innerHTML =
+    unsyncedLines.map((l, i) => `<div class="lyric-line" data-i="${i}">${l}</div>`).join("");
 
   let current = 0;
-  highlightUnsynced(0);
+  highlightLine(0);
   setBadge(false);
 
   function next() {
     if (current < unsyncedLines.length - 1) {
       current++;
-      highlightUnsynced(current);
+      highlightLine(current);
       syncTimer = setTimeout(next, Math.max(1500, unsyncedLines[current].split(" ").length * 420));
     }
   }
   syncTimer = setTimeout(next, Math.max(1500, unsyncedLines[0].split(" ").length * 420));
 }
 
-// --- MAIN FETCH ---
-
+// --- FETCH LYRICS ---
 async function fetchLyrics(artist, song) {
   setStatus("Loading lyrics...");
 
-  // 1. Try lrclib for synced lyrics
   try {
     const r = await fetch(`https://lrclib.net/api/get?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(song)}`);
-    if (r.ok) {
-      const d = await r.json();
-      if (d.syncedLyrics && startSynced(d.syncedLyrics)) return;
-      if (d.plainLyrics && d.plainLyrics.trim()) { startUnsynced(d.plainLyrics); return; }
-    }
+    const d = await r.json();
+    if (d.syncedLyrics?.trim() && startSynced(d.syncedLyrics)) return;
+    if (d.plainLyrics?.trim()) { startUnsynced(d.plainLyrics); return; }
   } catch {}
 
-  // 2. Fallback to lyrics.ovh
+  try {
+    const r = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(artist + " " + song)}`);
+    const d = await r.json();
+    const match = d?.[0];
+    if (match?.syncedLyrics?.trim() && startSynced(match.syncedLyrics)) return;
+    if (match?.plainLyrics?.trim()) { startUnsynced(match.plainLyrics); return; }
+  } catch {}
+
   try {
     const r = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(song)}`);
     const d = await r.json();
     if (d.lyrics?.trim()) { startUnsynced(d.lyrics); return; }
   } catch {}
 
-  setStatus("No lyrics found for this track.");
+  setStatus("No lyrics found for this track. 😔");
 }
 
+// --- MAIN ---
 async function updateSong() {
   try {
-    const res = await fetch(`https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${USERNAME}&api_key=${API_KEY}&format=json&limit=1`);
+    // fetch 2 tracks so we can calculate song start time from previous track
+    const res = await fetch(`https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${USERNAME}&api_key=${API_KEY}&format=json&limit=2`);
     const data = await res.json();
-    const track = data.recenttracks.track[0];
+    const tracks = data.recenttracks.track;
+    const track = tracks[0];
     const song = track.name;
     const artist = track.artist["#text"];
     const live = track["@attr"]?.nowplaying === "true";
@@ -332,12 +259,25 @@ async function updateSong() {
     document.getElementById("album-emoji").style.display = img ? "none" : "block";
 
     const key = song + artist;
-    if (key === lastTrack) return;
+    if (key === lastTrack) return; // same song, don't re-fetch
     lastTrack = key;
+
+    // ✅ Calculate when song actually started
+    if (live && tracks[1]?.date?.uts) {
+      // previous track ended = current track started (roughly)
+      songStartEpoch = parseInt(tracks[1].date.uts) * 1000;
+    } else if (track.date?.uts) {
+      songStartEpoch = parseInt(track.date.uts) * 1000;
+    } else {
+      songStartEpoch = Date.now(); // fallback
+    }
+
+    // reset slider on new song
+    slider.value = 0;
+    offsetVal.textContent = "0s";
 
     cancelAnimationFrame(syncTimer);
     clearTimeout(syncTimer);
-
     fetchLyrics(artist, song);
 
   } catch { setStatus("Connection error."); }
